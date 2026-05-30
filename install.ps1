@@ -19,6 +19,12 @@ if (-Not (Test-Path $sourceExe)) {
 Write-Host "📁 正在向系统核心区域植入程序..." 
 New-Item -ItemType Directory -Force -Path $installPath | Out-Null
 Copy-Item $sourceExe -Destination "$installPath\$exeName" -Force
+
+$sourceIco = ".\benshh.ico"
+if (Test-Path $sourceIco) {
+    Copy-Item $sourceIco -Destination "$installPath\benshh.ico" -Force
+}
+
 Write-Host "✅ 核心程序植入成功: $installPath\$exeName" -ForegroundColor Green
 
 # 3. 注册全局环境变量 (让任何终端都能随叫随到)
@@ -38,8 +44,11 @@ $WshShell = New-Object -comObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\Desktop\BenSHH.lnk")
 $Shortcut.TargetPath = "$installPath\$exeName"
 $Shortcut.WorkingDirectory = "$installPath"
-# 使用系统自带的终端图标来装扮它
-$Shortcut.IconLocation = "%SystemRoot%\System32\shell32.dll,27" 
+if (Test-Path "$installPath\benshh.ico") {
+    $Shortcut.IconLocation = "$installPath\benshh.ico"
+} else {
+    $Shortcut.IconLocation = "%SystemRoot%\System32\shell32.dll,27" 
+}
 $Shortcut.Save()
 Write-Host "✅ 桌面快捷方式生成完毕！" -ForegroundColor Green
 
