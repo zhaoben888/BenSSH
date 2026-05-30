@@ -1,0 +1,14 @@
+prefix=D:\shell3\vps-manager-ts\benshh-rs\target\debug\build\libz-sys-bf2fa3525a1e6a50\out
+exec_prefix=@exec_prefix@
+libdir=${prefix}/lib
+sharedlibdir=@sharedlibdir@
+includedir=${prefix}/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.3.2
+License: Zlib
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}

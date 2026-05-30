@@ -1,0 +1,16 @@
+[package]
+name = "benshh-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Terminal Remote Server Management Tool (Rust Edition)"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dirs = "5.0"
+crossterm = "0.27"
+ratatui = "0.25"
+ssh2 = "0.9"
+rfd = "0.14"
+dialoguer = "0.11"
