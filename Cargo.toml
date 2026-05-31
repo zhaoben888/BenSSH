@@ -1,5 +1,5 @@
 [package]
-name = "benshh-rs"
+name = "benssh"
 version = "0.1.0"
 edition = "2021"
 description = "Terminal Remote Server Management Tool (Rust Edition)"

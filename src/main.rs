@@ -156,10 +156,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                 KeyCode::Char('f') => {
                                     if let Some(i) = list_state.selected() {
                                         current_path = String::from("/root");
-                                        if let Ok(files) = sftp::list_directory(&entries[i], &current_path) {
-                                            remote_files = files;
-                                            app_mode = AppMode::FileBrowser;
-                                            if !remote_files.is_empty() { file_list_state.select(Some(0)); }
+                                        match sftp::list_directory(&entries[i], &current_path) {
+                                            Ok(files) => {
+                                                remote_files = files;
+                                                app_mode = AppMode::FileBrowser;
+                                                if !remote_files.is_empty() { file_list_state.select(Some(0)); }
+                                            }
+                                            Err(e) => {
+                                                feedback_msg = Some(format!("❌ SFTP 连接失败: {}", e));
+                                            }
                                         }
                                     }
                                 }

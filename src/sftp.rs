@@ -14,8 +14,9 @@ pub struct RemoteFile {
 // 支持密码和秘钥双模认证，解决打包前可能遇到的免密节点 SFTP 连接失败 Bug
 fn authenticate_session(sess: &mut Session, entry: &VpsEntry) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(ref key_path) = entry.key_path {
-        // 如果发现配置了私钥，自动使用私钥签名登录
-        sess.userauth_pubkey_file(&entry.user, None, Path::new(key_path), None)?;
+        let pub_path = format!("{}.pub", key_path);
+        let pubkey = if Path::new(&pub_path).exists() { Some(Path::new(&pub_path)) } else { None };
+        sess.userauth_pubkey_file(&entry.user, pubkey, Path::new(key_path), None)?;
     } else if let Some(ref pwd) = entry.password {
         sess.userauth_password(&entry.user, pwd)?;
     } else {

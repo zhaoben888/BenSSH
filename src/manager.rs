@@ -27,7 +27,7 @@ pub fn add_vps(entries: &mut Vec<VpsEntry>) -> Result<(), Box<dyn std::error::Er
         if pwd == "!q" { return Err("操作已取消".into()); }
         (Some(pwd), None)
     } else {
-        let default_key = dirs::home_dir().unwrap().join(".ssh/id_rsa").to_string_lossy().to_string();
+        let default_key = dirs::home_dir().unwrap().join(".ssh/benssh_rsa").to_string_lossy().to_string();
         let k_path: String = Input::new().with_prompt("私钥完整路径").default(default_key).interact_text()?;
         if k_path == "!q" { return Err("操作已取消".into()); }
         (None, Some(k_path))
@@ -100,14 +100,14 @@ pub fn setup_ssh_key(entries: &mut Vec<VpsEntry>, idx: usize) -> Result<(), Box<
     }
 
     let home = dirs::home_dir().ok_or("找不到 Home 目录")?;
-    let pub_key_path = home.join(".ssh/id_rsa.pub");
-    let priv_key_path = home.join(".ssh/id_rsa");
+    let pub_key_path = home.join(".ssh/benssh_rsa.pub");
+    let priv_key_path = home.join(".ssh/benssh_rsa");
 
     if !pub_key_path.exists() {
         println!("正在你的电脑上自动生成高强度 RSA 2048 密钥对...");
         std::fs::create_dir_all(home.join(".ssh"))?;
         std::process::Command::new("ssh-keygen")
-            .args(["-t", "rsa", "-N", "", "-f", priv_key_path.to_str().unwrap()])
+            .args(["-t", "rsa", "-b", "2048", "-m", "PEM", "-N", "", "-f", priv_key_path.to_str().unwrap()])
             .output()?;
         println!("✅ 密钥对生成成功！");
     }

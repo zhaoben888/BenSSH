@@ -1,0 +1,1 @@
+D:\shell3\vps-manager-ts\benshh-rs\target\release\benssh.exe: D:\shell3\vps-manager-ts\benshh-rs\build.rs D:\shell3\vps-manager-ts\benshh-rs\src\config.rs D:\shell3\vps-manager-ts\benshh-rs\src\main.rs D:\shell3\vps-manager-ts\benshh-rs\src\manager.rs D:\shell3\vps-manager-ts\benshh-rs\src\sftp.rs D:\shell3\vps-manager-ts\benshh-rs\src\ssh.rs
