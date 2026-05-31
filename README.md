@@ -1,4 +1,4 @@
-# ⚡ BenSHH (Rust Edition)
+# ⚡ BenSSH (Rust Edition)
 
 > 一个极客级别的 VPS 集群控制中枢与分布式文件漫游引擎。完全由 Rust 打造。
 
@@ -23,7 +23,7 @@
 # 1. 开启最强优化编译
 cargo build --release
 
-# 2. 将编译出的 target/release/benshh-rs.exe 改名为 benshh.exe
+# 2. 将编译出的 target/release/benssh.exe 复制并改名为 benssh.exe
 # 3. 将其与项目根目录的 install.ps1 放在一起，右键使用 PowerShell 运行 install.ps1 即可一键注入环境变量和生成桌面图标。
 ```
 
