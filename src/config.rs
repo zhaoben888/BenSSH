@@ -42,10 +42,10 @@ pub fn load_config() -> Result<Vec<VpsEntry>, Box<dyn std::error::Error>> {
 pub fn save_config(entries: &[VpsEntry]) -> Result<(), Box<dyn std::error::Error>> {
     let dir = config_dir().ok_or("找不到系统 Home 目录")?;
     fs::create_dir_all(&dir)?;
-    
+
     let path = config_path().unwrap();
     let data = serde_json::to_string_pretty(entries)?;
     fs::write(path, data)?;
-    
+
     Ok(())
 }

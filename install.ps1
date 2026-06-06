@@ -6,6 +6,7 @@ Set-Location -Path $PSScriptRoot
 
 $installPath = "$env:USERPROFILE\AppData\Local\Programs\benssh"
 $exeName = "benssh.exe"
+$legacyExeName = "BenSSH.exe"
 $sourceExe = ".\benssh.exe"
 
 Write-Host "🚀 开始安装 Google Antigravity - BenSSH..." -ForegroundColor Cyan
@@ -22,6 +23,7 @@ if (-Not (Test-Path $sourceExe)) {
 Write-Host "📁 正在向系统核心区域植入程序..." 
 New-Item -ItemType Directory -Force -Path $installPath | Out-Null
 Copy-Item $sourceExe -Destination "$installPath\$exeName" -Force
+Copy-Item $sourceExe -Destination "$installPath\$legacyExeName" -Force
 
 $sourceIco = ".\benssh.ico"
 if (Test-Path $sourceIco) {
@@ -29,6 +31,7 @@ if (Test-Path $sourceIco) {
 }
 
 Write-Host "✅ 核心程序植入成功: $installPath\$exeName" -ForegroundColor Green
+Write-Host "✅ 兼容旧入口已同步覆盖: $installPath\$legacyExeName" -ForegroundColor Green
 
 # 3. 注册全局环境变量 (让任何终端都能随叫随到)
 $oldPath = [Environment]::GetEnvironmentVariable("Path", "User")
