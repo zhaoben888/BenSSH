@@ -888,14 +888,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints([
-                    Constraint::Length(8), // 为装甲级巨型字体腾出空间
+                    Constraint::Length(8), // 为巨型 ASCII LOGO 腾出空间
                     Constraint::Min(2),
                     Constraint::Length(1)
                 ].as_ref())
                 .split(size);
 
-            // ==== 架构级美学：全实心装甲风格 (ANSI Shadow) ====
-            // 这是极客圈最顶级的 3D 实心方块字，绝对够大且不空洞！
+            // ==== 渲染 ASCII LOGO ====
             let ascii_logo = "\
 ██████╗ ███████╗███╗   ██╗███████╗███████╗██╗  ██╗\n\
 ██╔══██╗██╔════╝████╗  ██║██╔════╝██╔════╝██║  ██║\n\
@@ -1001,7 +1000,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         AppMode::ServerList => match key.code {
                             KeyCode::Enter => {
                                 if let Some(i) = list_state.selected() {
-                                    let _ = ssh::launch_interactive_shell(&entries[i]);
+                                    let mut success = true;
+                                    if entries[i].password.is_some() {
+                                        if let Err(e) = manager::ensure_ssh_key(&mut entries, i) {
+                                            feedback_msg = Some(format!("❌ 自动免密配置失败: {}\n(可能密码不正确、网络超时，或该节点禁用了此认证方式)", e));
+                                            success = false;
+                                        }
+                                    }
+                                    if success {
+                                        let _ = ssh::launch_interactive_shell(&entries[i]);
+                                    }
                                 }
                             }
                             KeyCode::Char('i') => {

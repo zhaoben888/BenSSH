@@ -53,7 +53,7 @@ pub fn add_vps(entries: &mut Vec<VpsEntry>) -> Result<(), Box<dyn std::error::Er
     } else {
         let default_key = dirs::home_dir()
             .unwrap()
-            .join(".ssh/benssh_rsa")
+            .join(".ssh/benssh_ed25519")
             .to_string_lossy()
             .to_string();
         let k_path: String = Input::new()
@@ -183,6 +183,13 @@ pub fn ensure_ssh_key(
     entries: &mut Vec<VpsEntry>,
     idx: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // 自动清理旧版 RSA 密钥路径
+    if let Some(ref path) = entries[idx].key_path {
+        if path.contains("benssh_rsa") {
+            entries[idx].key_path = None;
+        }
+    }
+
     if entries[idx].key_path.is_some() {
         return Ok(());
     }
@@ -206,22 +213,18 @@ fn provision_ssh_key(
     }
 
     let home = dirs::home_dir().ok_or("找不到 Home 目录")?;
-    let pub_key_path = home.join(".ssh/benssh_rsa.pub");
-    let priv_key_path = home.join(".ssh/benssh_rsa");
+    let pub_key_path = home.join(".ssh/benssh_ed25519.pub");
+    let priv_key_path = home.join(".ssh/benssh_ed25519");
 
     if !pub_key_path.exists() {
         if verbose {
-            println!("正在你的电脑上自动生成高强度 RSA 2048 密钥对...");
+            println!("正在你的电脑上自动生成高强度 ED25519 密钥对...");
         }
         std::fs::create_dir_all(home.join(".ssh"))?;
         let output = std::process::Command::new("ssh-keygen")
             .args([
                 "-t",
-                "rsa",
-                "-b",
-                "2048",
-                "-m",
-                "PEM",
+                "ed25519",
                 "-N",
                 "",
                 "-f",
@@ -249,19 +252,33 @@ fn provision_ssh_key(
     let mut sess = Session::new()?;
     sess.set_tcp_stream(tcp);
     sess.handshake()?;
-    sess.userauth_password(&entry.user, entry.password.as_ref().unwrap())?;
-
-    if !sess.authenticated() {
-        return Err("凭证无效，登入目标机器失败".into());
+    let pwd = entry.password.as_ref().unwrap();
+    if let Err(_) = sess.userauth_password(&entry.user, pwd) {
+        struct SimplePrompt {
+            password: String,
+        }
+        impl ssh2::KeyboardInteractivePrompt for SimplePrompt {
+            fn prompt<'a>(
+                &mut self,
+                _username: &str,
+                _instruction: &str,
+                prompts: &[ssh2::Prompt<'a>],
+            ) -> Vec<String> {
+                prompts.iter().map(|_| self.password.clone()).collect()
+            }
+        }
+        let mut prompter = SimplePrompt {
+            password: pwd.clone(),
+        };
+        sess.userauth_keyboard_interactive(&entry.user, &mut prompter)?;
     }
 
     if verbose {
-        println!("正在向目标 Linux 内核注入公钥指纹...");
+        println!("正在向目标主机写入公钥...");
     }
     let mut channel = sess.channel_session()?;
     let cmd = format!(
-        "mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && (grep -qxF '{}' ~/.ssh/authorized_keys || echo '{}' >> ~/.ssh/authorized_keys)",
-        pub_key_content.trim(),
+        "mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo '{}' >> ~/.ssh/authorized_keys",
         pub_key_content.trim()
     );
     channel.exec(&cmd)?;

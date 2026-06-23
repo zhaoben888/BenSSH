@@ -10,8 +10,7 @@ pub struct RemoteFile {
     pub size: u64,
 }
 
-// ==== 架构级重构：统一凭证拦截器 ====
-// 支持密码和秘钥双模认证，解决打包前可能遇到的免密节点 SFTP 连接失败 Bug
+// 统一凭证认证，支持密码和密钥双模认证
 pub fn authenticate_session(
     sess: &mut Session,
     entry: &VpsEntry,
@@ -25,14 +24,29 @@ pub fn authenticate_session(
         };
         sess.userauth_pubkey_file(&entry.user, pubkey, Path::new(key_path), None)?;
     } else if let Some(ref pwd) = entry.password {
-        sess.userauth_password(&entry.user, pwd)?;
+        if let Err(_) = sess.userauth_password(&entry.user, pwd) {
+            struct SimplePrompt {
+                password: String,
+            }
+            impl ssh2::KeyboardInteractivePrompt for SimplePrompt {
+                fn prompt<'a>(
+                    &mut self,
+                    _username: &str,
+                    _instruction: &str,
+                    prompts: &[ssh2::Prompt<'a>],
+                ) -> Vec<String> {
+                    prompts.iter().map(|_| self.password.clone()).collect()
+                }
+            }
+            let mut prompter = SimplePrompt {
+                password: pwd.clone(),
+            };
+            sess.userauth_keyboard_interactive(&entry.user, &mut prompter)?;
+        }
     } else {
-        return Err("节点未配置任何有效凭证（密码或私钥），拒绝访问".into());
+        return Err("必须提供密码或私钥！".into());
     }
-
-    if !sess.authenticated() {
-        return Err("SFTP 拒绝访问：凭证失效，请检查密钥或密码是否被吊销".into());
-    }
+    
     Ok(())
 }
 
